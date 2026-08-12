@@ -14,8 +14,7 @@ infrastructure/terraform/*.tfplan
 infrastructure/terraform/crash.log
 
 # IDE
-.idea/workspace.xml
-.idea/misc.xml
+.idea/
 
 # Local env files
 .env

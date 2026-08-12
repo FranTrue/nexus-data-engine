@@ -159,7 +159,7 @@ GRANT SELECT, INSERT, UPDATE ON FUTURE TABLES IN SCHEMA NEXUS_DB.RAW TO ROLE NEX
 GRANT SELECT, INSERT, UPDATE ON FUTURE TABLES IN SCHEMA NEXUS_DB.ANALYTICS TO ROLE NEXUS_LOADER;
 
 CREATE USER IF NOT EXISTS AIRFLOW_SVC
-  PASSWORD = '<choose-a-strong-password>'
+  PASSWORD = '<STRONG_PASSWORD>'
   DEFAULT_ROLE = NEXUS_LOADER
   DEFAULT_WAREHOUSE = NEXUS_WH
   MUST_CHANGE_PASSWORD = FALSE;
@@ -175,13 +175,13 @@ GRANT SELECT ON FUTURE TABLES IN SCHEMA NEXUS_DB.ANALYTICS TO ROLE ACCOUNTADMIN;
 ```
 
 Store the connection as a Kubernetes Secret (never commit this — it's excluded from Helm
-values and from git on purpose). Replace `<account>` (the `org-account` identifier from your
-Snowsight URL) and `<password>`:
+values and from git on purpose). Replace `<ACCOUNT>` (the `org-account` identifier from your
+Snowsight URL) and `<STRONG_PASSWORD>` (the same one you set above):
 
 ```bash
 kubectl create secret generic airflow-snowflake-conn \
   --namespace airflow \
-  --from-literal=AIRFLOW_CONN_SNOWFLAKE_DEFAULT='{"conn_type":"snowflake","login":"AIRFLOW_SVC","password":"<password>","schema":"RAW","extra":{"account":"<account>","database":"NEXUS_DB","warehouse":"NEXUS_WH","role":"NEXUS_LOADER"}}'
+  --from-literal=AIRFLOW_CONN_SNOWFLAKE_DEFAULT='{"conn_type":"snowflake","login":"AIRFLOW_SVC","password":"<STRONG_PASSWORD>","schema":"RAW","extra":{"account":"<ACCOUNT>","database":"NEXUS_DB","warehouse":"NEXUS_WH","role":"NEXUS_LOADER"}}'
 ```
 
 Then apply it to the running release:
