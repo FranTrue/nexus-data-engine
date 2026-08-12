@@ -1,0 +1,39 @@
+executor: KubernetesExecutor
+
+defaultAirflowRepository: apache/airflow
+defaultAirflowTag: 2.8.1-python3.11
+
+# Static keys (created via kubectl, see README) so pods don't rotate credentials
+# and restart on every deploy. Named nexus-* to avoid colliding with the chart's
+# own default secret names (<release-name>-fernet-key, etc).
+# fernetKeySecretName only takes effect on a fresh `helm install`, not `helm upgrade`.
+fernetKeySecretName: nexus-fernet-key
+webserverSecretKeySecretName: nexus-webserver-secret-key
+
+images:
+  airflow:
+    repository: nexus-data-engine-airflow
+    tag: latest
+    pullPolicy: Never
+
+# Postgres metadata DB: bundled subchart, enabled by default, no override needed.
+# Bitnami moved this pinned tag to bitnamilegacy/ (dropped from the free bitnami/ namespace).
+postgresql:
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
+    tag: 16.1.0-debian-11-r15
+
+# host.docker.internal reaches the Mac's LocalStack from inside kind pods
+# (127.0.0.1 there would mean the pod itself, not the host).
+env:
+  - name: AWS_ENDPOINT_URL
+    value: "http://host.docker.internal:4566"
+  - name: AWS_DEFAULT_REGION
+    value: "us-east-1"
+
+# Injects the Snowflake connection from a Secret created via `kubectl create secret`.
+# Never committed — kept out of this file and out of git on purpose.
+extraEnvFrom: |
+  - secretRef:
+      name: 'airflow-snowflake-conn'

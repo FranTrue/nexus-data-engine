@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Terraform / OpenTofu
+infrastructure/terraform/.terraform/
+infrastructure/terraform/terraform.tfstate
+infrastructure/terraform/terraform.tfstate.backup
+infrastructure/terraform/*.tfplan
+infrastructure/terraform/crash.log
+
+# IDE
+.idea/workspace.xml
+.idea/misc.xml
+
+# Local env files
+.env
+.env.local
+
+# OS
+.DS_Store

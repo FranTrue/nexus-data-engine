@@ -1,0 +1,66 @@
+name: Data Pipeline CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install apache-airflow==2.8.1
+
+      - name: Run Syntax and Lint Checks
+        run: |
+          # Fails the build on critical syntax errors or undefined names
+          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run Unit Tests
+        run: pytest tests/ -v
+
+      - name: Validate Airflow DAGs Import Cleanly
+        run: |
+          python -c "
+          from airflow.models import DagBag
+          bag = DagBag(dag_folder='airflow/dags', include_examples=False)
+          assert not bag.import_errors, bag.import_errors
+          print(f'{len(bag.dags)} DAG(s) imported successfully')
+          "
+
+  validate-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Validate
+        working-directory: infrastructure/terraform
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Validate Helm Values Against the Airflow Chart
+        run: |
+          helm repo add apache-airflow https://airflow.apache.org
+          helm repo update
+          helm template airflow apache-airflow/airflow --version 1.12.0 -f airflow/values.yaml > /dev/null
